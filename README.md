@@ -6,8 +6,8 @@
 - WeatherController: added /compareDaylight and /rainCheck endpoints, both of which take two country names as parameters.
   compareDaylight returns the city weather info of the city with the longest day,
   or the first city weather info if they have the same length of day.
-  rainCheck returns a list of boolean values for if the city is raining in the same order as the cities are given.
-  e.g if given London (raining) and Wellington (not raining) it returns [true, false]
+  rainCheck returns a map of boolean values for if the city is raining.
+  e.g if given London (raining) and Wellington (not raining) it returns {"London": true, "Wellington": false}
   The brief was vague on what was necessary for the rainCheck endpoint
   as it merely said "check which city it is currently raining in."
   So, as raining is not mutually exclusive, I returned the status of both cities.  

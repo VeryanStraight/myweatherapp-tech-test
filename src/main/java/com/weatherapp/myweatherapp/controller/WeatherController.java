@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Controller class for handling weather-related HTTP requests.
  * Provides endpoints for fetching weather forecasts, comparing daylight duration,
@@ -38,7 +41,7 @@ public class WeatherController {
    * @param city2 - the name of the second city
    * @return ResponseEntity<CityInfo> - the city with the longer daylight duration
    */
-  @GetMapping("/compareDaylight")
+  @GetMapping("/daylight-comparison")
   public ResponseEntity<CityInfo> compareDaylight(@RequestParam("city1") String city1, @RequestParam("city2") String city2) {
     try {
       CityInfo cityInfo1 = weatherService.forecastByCity(city1);
@@ -55,16 +58,18 @@ public class WeatherController {
    * Handles GET requests to check if it is raining in two cities.
    * @param city1 - the name of the first city
    * @param city2 - the name of the second city
-   * @return ResponseEntity<boolean[]> - an array indicating rain status in both cities
+   * @return ResponseEntity<Map<String, Boolean>> - a JSON object mapping each city to its rain status
    */
-  @GetMapping("/rainCheck")
-  public ResponseEntity<boolean[]> rainCheck(@RequestParam("city1") String city1, @RequestParam("city2") String city2) {
+  @GetMapping("/rain-check")
+  public ResponseEntity<Map<String, Boolean>> rainCheck(@RequestParam("city1") String city1, @RequestParam("city2") String city2) {
     try {
-      boolean[] raining = new boolean[2];
-      raining[0] = weatherService.isRaining(city1);
-      raining[1] = weatherService.isRaining(city2);
+      boolean isRainingCity1 = weatherService.isRaining(city1);
+      boolean isRainingCity2 = weatherService.isRaining(city2);
 
-      return ResponseEntity.ok(raining);
+      Map<String, Boolean> response = new HashMap<>();
+      response.put(city1, isRainingCity1);
+      response.put(city2, isRainingCity2);
+      return ResponseEntity.ok(response);
     } catch (HttpClientErrorException e) {
       return ResponseEntity.status(e.getStatusCode()).build();
     }

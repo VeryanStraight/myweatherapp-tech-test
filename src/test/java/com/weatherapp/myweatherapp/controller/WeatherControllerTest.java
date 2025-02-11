@@ -14,7 +14,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.client.HttpClientErrorException;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -66,7 +65,7 @@ public class WeatherControllerTest {
         when(weatherService.forecastByCity("Rainyville")).thenReturn(rainyCity);
         when(weatherService.compareDaylight(sunnyCity, rainyCity)).thenReturn(-3600); // Sunnyville has shorter daylight
 
-        mockMvc.perform(get("/compareDaylight")
+        mockMvc.perform(get("/daylight-comparison")
                         .param("city1", "Sunnyville")
                         .param("city2", "Rainyville")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -75,74 +74,17 @@ public class WeatherControllerTest {
                 .andExpect(jsonPath("$.description").value("A rainy city"));
     }
 
-    // Test for rain check between two cities
-    @Test
-    public void testRainCheck() throws Exception {
-        when(weatherService.isRaining("Sunnyville")).thenReturn(false);
-        when(weatherService.isRaining("Rainyville")).thenReturn(true);
-
-        mockMvc.perform(get("/rainCheck")
-                        .param("city1", "Sunnyville")
-                        .param("city2", "Rainyville")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0]").value(false))
-                .andExpect(jsonPath("$[1]").value(true));
-    }
-
     // Test for invalid city input in compareDaylight
     @Test
     public void testCompareDaylight_InvalidCity() throws Exception {
         when(weatherService.forecastByCity("Sunnyville")).thenReturn(sunnyCity);
         when(weatherService.forecastByCity("InvalidCity")).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
-        mockMvc.perform(get("/compareDaylight")
+        mockMvc.perform(get("/daylight-comparison")
                         .param("city1", "Sunnyville")
                         .param("city2", "InvalidCity")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
-    }
-
-    // Test for invalid city input in rainCheck
-    @Test
-    public void testRainCheck_InvalidCity() throws Exception {
-        when(weatherService.isRaining("InvalidCity")).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
-
-        mockMvc.perform(get("/rainCheck")
-                        .param("city1", "InvalidCity")
-                        .param("city2", "Rainyville")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-    }
-
-    // Test for both cities raining in rainCheck
-    @Test
-    public void testRainCheck_BothCitiesRaining() throws Exception {
-        when(weatherService.isRaining("Sunnyville")).thenReturn(true);
-        when(weatherService.isRaining("Rainyville")).thenReturn(true);
-
-        mockMvc.perform(get("/rainCheck")
-                        .param("city1", "Sunnyville")
-                        .param("city2", "Rainyville")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0]").value(true))
-                .andExpect(jsonPath("$[1]").value(true));
-    }
-
-    // Test for no cities raining in rainCheck
-    @Test
-    public void testRainCheck_NoCitiesRaining() throws Exception {
-        when(weatherService.isRaining("Sunnyville")).thenReturn(false);
-        when(weatherService.isRaining("Rainyville")).thenReturn(false);
-
-        mockMvc.perform(get("/rainCheck")
-                        .param("city1", "Sunnyville")
-                        .param("city2", "Rainyville")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0]").value(false))
-                .andExpect(jsonPath("$[1]").value(false));
     }
 
     // Test for comparing daylight with equal day length
@@ -161,7 +103,7 @@ public class WeatherControllerTest {
         when(weatherService.forecastByCity("Equalville")).thenReturn(cityWithSameDayLength);
         when(weatherService.compareDaylight(sunnyCity, cityWithSameDayLength)).thenReturn(0); // Same daylight duration
 
-        mockMvc.perform(get("/compareDaylight")
+        mockMvc.perform(get("/daylight-comparison")
                         .param("city1", "Sunnyville")
                         .param("city2", "Equalville")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -177,12 +119,69 @@ public class WeatherControllerTest {
         when(weatherService.forecastByCity("Sunnyville")).thenReturn(sunnyCity);
         when(weatherService.compareDaylight(rainyCity, sunnyCity)).thenReturn(3600); // Rainyville has longer daylight
 
-        mockMvc.perform(get("/compareDaylight")
+        mockMvc.perform(get("/daylight-comparison")
                         .param("city1", "Rainyville")
                         .param("city2", "Sunnyville")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.address").value("Rainyville"))
                 .andExpect(jsonPath("$.description").value("A rainy city"));
+    }
+
+    // Test for rain check between two cities
+    @Test
+    public void testRainCheck() throws Exception {
+        when(weatherService.isRaining("Sunnyville")).thenReturn(false);
+        when(weatherService.isRaining("Rainyville")).thenReturn(true);
+
+        mockMvc.perform(get("/rain-check")
+                        .param("city1", "Sunnyville")
+                        .param("city2", "Rainyville")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.Sunnyville").value(false))
+                .andExpect(jsonPath("$.Rainyville").value(true));
+    }
+
+    // Test for invalid city input in rainCheck
+    @Test
+    public void testRainCheck_InvalidCity() throws Exception {
+        when(weatherService.isRaining("InvalidCity")).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
+        mockMvc.perform(get("/rain-check")
+                        .param("city1", "InvalidCity")
+                        .param("city2", "Rainyville")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    // Test for both cities raining in rainCheck
+    @Test
+    public void testRainCheck_BothCitiesRaining() throws Exception {
+        when(weatherService.isRaining("Sunnyville")).thenReturn(true);
+        when(weatherService.isRaining("Rainyville")).thenReturn(true);
+
+        mockMvc.perform(get("/rain-check")
+                        .param("city1", "Sunnyville")
+                        .param("city2", "Rainyville")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.Sunnyville").value(true))
+                .andExpect(jsonPath("$.Rainyville").value(true));
+    }
+
+    // Test for no cities raining in rainCheck
+    @Test
+    public void testRainCheck_NoCitiesRaining() throws Exception {
+        when(weatherService.isRaining("Sunnyville")).thenReturn(false);
+        when(weatherService.isRaining("Rainyville")).thenReturn(false);
+
+        mockMvc.perform(get("/rain-check")
+                        .param("city1", "Sunnyville")
+                        .param("city2", "Rainyville")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.Sunnyville").value(false))
+                .andExpect(jsonPath("$.Rainyville").value(false));
     }
 }
