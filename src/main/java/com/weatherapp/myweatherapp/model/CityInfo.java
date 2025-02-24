@@ -1,8 +1,11 @@
 package com.weatherapp.myweatherapp.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
 import java.util.List;
 
+@Data
 public class CityInfo {
 
   @JsonProperty("address")
@@ -17,7 +20,8 @@ public class CityInfo {
   @JsonProperty("days")
   List<Days> days;
 
-  static class CurrentConditions {
+  @Data
+  public static class CurrentConditions { //todo is this bad practice
     @JsonProperty("temp")
     String currentTemperature;
 
@@ -37,7 +41,8 @@ public class CityInfo {
     String conditions;
   }
 
-  static class Days {
+  @Data
+  public static class Days {
 
     @JsonProperty("datetime")
     String date;
